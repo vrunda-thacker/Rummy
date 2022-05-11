@@ -53,10 +53,14 @@ module.exports = class Game {
    * @returns {string} The status
    */
   _retrieve_status(code) {
+    console.log("lobby code ")
+    console.log(code)
 
     if (/^\w{5,12}$/.test(code)) {
 
       let lobby = this.lobbys[code];
+      console.log("here ", lobby)
+      console.log(this.lobbys)
 
       if (lobby) {
         return lobby.isWaiting ? 'waiting' : 'closed';

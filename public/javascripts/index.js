@@ -11,6 +11,8 @@ let joinCPU = () => { // Creates CPU game
 };
 
 handle.status = (data) => { // Handle getting the status of a lobby
+  console.log("status dta")
+  console.log(data)
 
   if (data.cmd == 'status') {
     if (data.status == 'waiting') {
@@ -39,6 +41,8 @@ $('#code').on('keyup', () => { // As the user types...
   $('#cpubtn').css({ display: 'none' });
 
   let code = $('#code').val().replace(/\W/, ''); // Replace invalid chars
+  console.log("code kaik aavyu");
+  console.log(code);
 
   $('#code').val(code);
 
@@ -47,6 +51,9 @@ $('#code').on('keyup', () => { // As the user types...
     $('#lobbybtn').attr('class', 'btn btn-default');
     $('#lobbybtn').html('....');
     $('#lobbybtn').on('click', () => {});
+
+    console.log("send data of currently typed lobby");
+    console.log(code);
 
     send({
       'cmd': 'status',

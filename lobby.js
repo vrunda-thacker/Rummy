@@ -17,7 +17,7 @@ module.exports = class Lobby {
     this.game = game;
     this.token = Crypto.randomBytes(22).toString('hex'); // Generate random lobby code
 
-    this.sockets = [null, null];
+    this.sockets = [null, null, null];
     this.isWaiting = true;
     this.choosePhase = true;
     this.turn = 0;
@@ -35,6 +35,10 @@ module.exports = class Lobby {
    */
   handleData(ws, data) {
 
+    console.log("handle data of lobby")
+    // console.log(ws)
+    console.log(data)
+
     clearTimeout(this.selfDestruct);  // Continue to postpone self destruct until no data is sent
     this.selfDestruct = setTimeout(() => {
       this._doSelfDistruct();
@@ -49,6 +53,8 @@ module.exports = class Lobby {
     } else if (data.cmd == 'click' && this.sockets.indexOf(ws) == this.turn) {
 
       let playerIndex = this.sockets.indexOf(ws);
+      console.log("playerIndex")
+      console.log(playerIndex)
 
       if (this.choosePhase) {
 
@@ -235,6 +241,9 @@ module.exports = class Lobby {
    */
   _process_join(ws) {
 
+    console.log("lobby null 6 ke nahi")
+    console.log(this.sockets)
+
     if (!this.isWaiting || this.sockets.indexOf(null) == -1) { // If lobby full -> tell new client to leave
 
       this._send(ws, {
@@ -248,15 +257,46 @@ module.exports = class Lobby {
         this.isWaiting = false;
       }
 
-      this._send(ws, { // Send copy of current deck and layout to new client
-        cmd: 'cards',
-        cards: this.playerCards[this.sockets.indexOf(ws)],
-        opcards: this.playerCards[this.sockets.indexOf(ws) ^ 1].length,
-        deck: this.deck.length,
-        melds: this.melds,
-        draw: this.draw,
-        myturn: this.sockets.indexOf(ws) == this.turn
-      });
+      // console.log("==================")
+      // console.log(this.sockets.indexOf(ws))
+      // console.log(this.sockets.indexOf(ws) ^ 1)
+      // console.log(this.playerCards[this.sockets.indexOf(ws) ^ 1])
+      // console.log("----------------------")
+
+      if (this.sockets.indexOf(ws) == 0){
+        this._send(ws, { // Send copy of current deck and layout to new client
+          cmd: 'cards',
+          cards: this.playerCards[0],
+          opcards: this.playerCards[1].length,
+          anothercards: this.playerCards[2].length,
+          deck: this.deck.length,
+          melds: this.melds,
+          draw: this.draw,
+          myturn: this.sockets.indexOf(ws) == this.turn
+        });
+      } else if (this.sockets.indexOf(ws) == 1){
+        this._send(ws, { // Send copy of current deck and layout to new client
+          cmd: 'cards',
+          cards: this.playerCards[1],
+          opcards: this.playerCards[2].length,
+          anothercards: this.playerCards[0].length,
+          deck: this.deck.length,
+          melds: this.melds,
+          draw: this.draw,
+          myturn: this.sockets.indexOf(ws) == this.turn
+        });
+      } else if (this.sockets.indexOf(ws) == 2){
+        this._send(ws, { // Send copy of current deck and layout to new client
+          cmd: 'cards',
+          cards: this.playerCards[2],
+          opcards: this.playerCards[0].length,
+          anothercards: this.playerCards[1].length,
+          deck: this.deck.length,
+          melds: this.melds,
+          draw: this.draw,
+          myturn: this.sockets.indexOf(ws) == this.turn
+        });
+      }
 
     }
 
@@ -268,6 +308,11 @@ module.exports = class Lobby {
    * @param {Object} data - Data associated w/choice
    */
   _process_choose_phase(playerIndex, data) {
+    console.log("from process choose phase", playerIndex)
+    console.log(data)
+
+    let opPlayerIndex = playerIndex == 2 ? 0 : playerIndex + 1
+    let anotherPlayerIndex = playerIndex == 1 ? 0 : playerIndex == 2 ? 1 : playerIndex + 2
 
     if (data.button == 'left' && data.card == 'deck' && this.deck.length > 0) { // Draw from deck
 
@@ -280,10 +325,15 @@ module.exports = class Lobby {
         player: 'me',
         card: nextCard
       });
-      this._send(this.sockets[playerIndex ^ 1], {
+      this._send(this.sockets[opPlayerIndex], {
         cmd: 'draw',
         from: 'deck',
         player: 'op'
+      });
+      this._send(this.sockets[anotherPlayerIndex], {
+        cmd: 'draw',
+        from: 'deck',
+        player: 'another'
       });
       this.choosePhase = false;
 
@@ -298,10 +348,15 @@ module.exports = class Lobby {
         player: 'me',
         card: nextCard
       });
-      this._send(this.sockets[playerIndex ^ 1], {
+      this._send(this.sockets[opPlayerIndex], {
         cmd: 'draw',
         from: 'draw',
         player: 'op'
+      });
+      this._send(this.sockets[anotherPlayerIndex], {
+        cmd: 'draw',
+        from: 'draw',
+        player: 'another'
       });
       this.choosePhase = false;
 
@@ -319,18 +374,27 @@ module.exports = class Lobby {
     this.playerCards[playerIndex].splice(this.playerCards[playerIndex].indexOf(card), 1);
     this.draw.push(card);
 
+    let opPlayerIndex = playerIndex == 2 ? 0 : playerIndex + 1
+    let anotherPlayerIndex = playerIndex == 1 ? 0 : playerIndex == 2 ? 1 : playerIndex + 2
+
     this._send(this.sockets[playerIndex], {
       cmd: 'discard',
       player: 'me',
       card: card
     });
-    this._send(this.sockets[playerIndex ^ 1], {
+    this._send(this.sockets[opPlayerIndex], {
       cmd: 'discard',
       player: 'op',
       card: card
     });
+    this._send(this.sockets[anotherPlayerIndex], {
+      cmd: 'discard',
+      player: 'another',
+      card: card
+    });
     this.choosePhase = true;
-    this.turn ^= 1;
+    // this.turn ^= 1;
+    this.turn = this.turn == 2 ? 0 : this.turn + 1;
 
     if(this.turn == 1 && this.cpu) {
       this._play_cpu_turn();
@@ -528,6 +592,7 @@ module.exports = class Lobby {
     }
 
     this.playerCards = [
+      cards.splice(0, 10),
       cards.splice(0, 10),
       cards.splice(0, 10)
     ];

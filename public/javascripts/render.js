@@ -20,11 +20,11 @@ let setGlow = (selector, amt, color) => { // Adds a colored glow
   });
 }
 
-let renderHand = (handCards, flip = false) => { // Renders hand (for both self and enemy)
+let renderHand = (handCards, flip = false, type="me") => { // Renders hand (for both self and enemy)
 
   if(!flip) { sortDeck(handCards) }; // Sort my cards
 
-  let height = flip ? 20 : $(window).height() - 250;
+  let height = flip ? 30 : $(window).height() - 250;
   let dangle = flip ? 4 : -4; // Rotation offset
 
   let i = 1,
@@ -32,6 +32,8 @@ let renderHand = (handCards, flip = false) => { // Renders hand (for both self a
       rightIndex = -1,
       half = Math.floor(handCards.length / 2),
       offset = ($(window).width() / 2) - (20 * handCards.length / 2) - 70;
+  let opOffset = ($(window).width() / 4) - (20 * handCards.length / 2) - 70;
+  let anotherOffset = ($(window).width() / 2);
 
   if (handCards.length % 2 == 1) {
     leftIndex = half - 1;
@@ -43,8 +45,16 @@ let renderHand = (handCards, flip = false) => { // Renders hand (for both self a
   }
 
   while (leftIndex >= 0) { // Start at middle card and setPos going outward
-    setElementPos(handCards[leftIndex], offset + leftIndex * 20, height, leftIndex + 100, i * dangle);
-    setElementPos(handCards[rightIndex], offset + rightIndex * 20, height, rightIndex + 100, i * -dangle);
+    if (type == "me"){
+      setElementPos(handCards[leftIndex], offset + leftIndex * 20, height, leftIndex + 100, i * dangle);
+      setElementPos(handCards[rightIndex], offset + rightIndex * 20, height, rightIndex + 100, i * -dangle);
+    } else if (type == "op"){
+      setElementPos(handCards[leftIndex], opOffset + leftIndex * 20, height, leftIndex + 100, i * dangle);
+      setElementPos(handCards[rightIndex], opOffset + rightIndex * 20, height, rightIndex + 100, i * -dangle);
+    } else if (type == "another"){
+      setElementPos(handCards[leftIndex], anotherOffset + leftIndex * 20, height, leftIndex + 100, i * dangle);
+      setElementPos(handCards[rightIndex], anotherOffset + rightIndex * 20, height, rightIndex + 100, i * -dangle);
+    }
     leftIndex--;
     rightIndex++;
     i++;

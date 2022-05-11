@@ -10,6 +10,7 @@ let code = params[4],
 // Note: The server verifies their integrity to prevent Front-End tampering/cheating
 let hand = [],
     ophand = [],
+    anotherhand = [],
     deck = [],
     draw = [],
     melds = [];
@@ -111,7 +112,8 @@ let beginLeave = () => { // Start a countdown to automatically leave
 
 $(window).on('resize', () => { // Re-render all elements when the window size changes
   renderHand(hand);
-  renderHand(ophand, flip=true);
+  renderHand(ophand, flip=true, "op");
+  renderHand(anotherhand, flip=true, "another");
   renderDeck(deck, left=true);
   renderDeck(draw);
   renderMelds(melds);
