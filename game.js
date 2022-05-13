@@ -1,4 +1,6 @@
+const consts = require('./consts');
 const Lobby = require('./lobby');
+const Utils = require('./utils');
 
 // Exports Game Class
 module.exports = class Game {
@@ -22,6 +24,13 @@ module.exports = class Game {
       ws.on('message', (message) => {
 
         let data = JSON.parse(message);
+        console.log("from on message")
+        console.log(data);
+        if (data.playerName){
+          Utils.registerPlayerName(data.playerName)
+        }
+        console.log(consts.playerNames)
+        
 
         if (data.cmd == 'status') {
           this._send(ws, {

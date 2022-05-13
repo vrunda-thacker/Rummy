@@ -22,9 +22,10 @@
   <div class="justsmallenough centered panel panel-default">
     <div class="panel-body">
       <div class="input-group">
-        <input id="code" type="text" class="form-control">
+        <input id="player-name" placeholder="Player Name" type="text" class="form-control">
+        <input id="code" placeholder="Lobby code" type="text" class="form-control">
         <span class="input-group-btn">
-        <button id="lobbybtn" class="btn btn-default" type="button">Join</button>
+        <button id="lobbybtn" class="btn btn-default" type="button" style="margin-left: 10px;">Join</button>
         <button style="display: none" id="cpubtn" class="btn btn-warning" type="button">CPU</button>
         </span>
       </div>
@@ -35,5 +36,6 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script src="/javascripts/socket.js"></script>
 <script src="/javascripts/index.js"></script>
+<!-- <script src="https://requirejs.org/docs/release/2.3.5/minified/require.js"></script> -->
 
 </html>

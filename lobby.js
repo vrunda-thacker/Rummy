@@ -1,4 +1,6 @@
 const Crypto = require("crypto");
+const consts = require("./consts");
+const Utils = require("./utils");
 
 // Exports Lobby Class
 module.exports = class Lobby {
@@ -228,7 +230,10 @@ module.exports = class Lobby {
     for(let i = 0; i < this.playerCards.length; i++) {
       if(this.playerCards[i].length == 0) {
         this._send(this.sockets[i], {cmd: 'win', score: this._calculate_card_score(this.playerCards[i ^ 1])});
-        this._send(this.sockets[i ^ 1], {cmd: 'loss'});
+        let playerIndexesUtils = Utils.findIndexes(this.sockets.length, i)
+        for(let j = 1; j < playerIndexesUtils.length; j++){
+          this._send(this.sockets[playerIndexesUtils[j]], {cmd: 'loss'});
+        }
         this._doSelfDistruct();
         break;
       }
@@ -263,40 +268,44 @@ module.exports = class Lobby {
       // console.log(this.playerCards[this.sockets.indexOf(ws) ^ 1])
       // console.log("----------------------")
 
-      if (this.sockets.indexOf(ws) == 0){
-        this._send(ws, { // Send copy of current deck and layout to new client
-          cmd: 'cards',
-          cards: this.playerCards[0],
-          opcards: this.playerCards[1].length,
-          anothercards: this.playerCards[2].length,
-          deck: this.deck.length,
-          melds: this.melds,
-          draw: this.draw,
-          myturn: this.sockets.indexOf(ws) == this.turn
-        });
-      } else if (this.sockets.indexOf(ws) == 1){
-        this._send(ws, { // Send copy of current deck and layout to new client
-          cmd: 'cards',
-          cards: this.playerCards[1],
-          opcards: this.playerCards[2].length,
-          anothercards: this.playerCards[0].length,
-          deck: this.deck.length,
-          melds: this.melds,
-          draw: this.draw,
-          myturn: this.sockets.indexOf(ws) == this.turn
-        });
-      } else if (this.sockets.indexOf(ws) == 2){
-        this._send(ws, { // Send copy of current deck and layout to new client
-          cmd: 'cards',
-          cards: this.playerCards[2],
-          opcards: this.playerCards[0].length,
-          anothercards: this.playerCards[1].length,
-          deck: this.deck.length,
-          melds: this.melds,
-          draw: this.draw,
-          myturn: this.sockets.indexOf(ws) == this.turn
-        });
-      }
+      let playerIndexesUtils = Utils.findIndexes(this.sockets.length, this.sockets.indexOf(ws))
+      console.log("player index by utils")
+      console.log(playerIndexesUtils)
+
+      // if (this.sockets.indexOf(ws) == 0){
+      this._send(ws, { // Send copy of current deck and layout to new client
+        cmd: 'cards',
+        cards: this.playerCards[playerIndexesUtils[0]],
+        opcards: this.playerCards[playerIndexesUtils[1]].length,
+        anothercards: this.playerCards[playerIndexesUtils[2]].length,
+        deck: this.deck.length,
+        melds: this.melds,
+        draw: this.draw,
+        myturn: this.sockets.indexOf(ws) == this.turn
+      });
+      // } else if (this.sockets.indexOf(ws) == 1){
+      //   this._send(ws, { // Send copy of current deck and layout to new client
+      //     cmd: 'cards',
+      //     cards: this.playerCards[1],
+      //     opcards: this.playerCards[2].length,
+      //     anothercards: this.playerCards[0].length,
+      //     deck: this.deck.length,
+      //     melds: this.melds,
+      //     draw: this.draw,
+      //     myturn: this.sockets.indexOf(ws) == this.turn
+      //   });
+      // } else if (this.sockets.indexOf(ws) == 2){
+      //   this._send(ws, { // Send copy of current deck and layout to new client
+      //     cmd: 'cards',
+      //     cards: this.playerCards[2],
+      //     opcards: this.playerCards[0].length,
+      //     anothercards: this.playerCards[1].length,
+      //     deck: this.deck.length,
+      //     melds: this.melds,
+      //     draw: this.draw,
+      //     myturn: this.sockets.indexOf(ws) == this.turn
+      //   });
+      // }
 
     }
 
@@ -310,31 +319,57 @@ module.exports = class Lobby {
   _process_choose_phase(playerIndex, data) {
     console.log("from process choose phase", playerIndex)
     console.log(data)
+    console.log(consts)
 
-    let opPlayerIndex = playerIndex == 2 ? 0 : playerIndex + 1
-    let anotherPlayerIndex = playerIndex == 1 ? 0 : playerIndex == 2 ? 1 : playerIndex + 2
+    let playerIndexesUtils = Utils.findIndexes(this.sockets.length, playerIndex)
+
+    let opPlayerIndex = playerIndexesUtils[1] // playerIndex == 2 ? 0 : playerIndex + 1
+    let anotherPlayerIndex = playerIndexesUtils[2] //playerIndex == 1 ? 0 : playerIndex == 2 ? 1 : playerIndex + 2
 
     if (data.button == 'left' && data.card == 'deck' && this.deck.length > 0) { // Draw from deck
 
       let nextCard = this.deck.pop();
       this.playerCards[playerIndex].push(nextCard);
 
-      this._send(this.sockets[playerIndex], {
-        cmd: 'draw',
-        from: 'deck',
-        player: 'me',
-        card: nextCard
-      });
-      this._send(this.sockets[opPlayerIndex], {
-        cmd: 'draw',
-        from: 'deck',
-        player: 'op'
-      });
-      this._send(this.sockets[anotherPlayerIndex], {
-        cmd: 'draw',
-        from: 'deck',
-        player: 'another'
-      });
+      for(let k =0; k < playerIndexesUtils.length; k++){
+        if (k == 0){
+          this._send(this.sockets[playerIndexesUtils[k]], {
+            cmd: 'draw',
+            from: 'deck',
+            player: 'me',
+            card: nextCard
+          });
+        } else{
+          let playerName = ""
+          if(k == 1){
+            playerName = "op"
+          } else{
+            playerName = "another"
+          }
+          this._send(this.sockets[playerIndexesUtils[k]], {
+            cmd: 'draw',
+            from: 'deck',
+            player: playerName
+          });
+        }
+      }
+
+      // this._send(this.sockets[playerIndex], {
+      //   cmd: 'draw',
+      //   from: 'deck',
+      //   player: 'me',
+      //   card: nextCard
+      // });
+      // this._send(this.sockets[opPlayerIndex], {
+      //   cmd: 'draw',
+      //   from: 'deck',
+      //   player: 'op'
+      // });
+      // this._send(this.sockets[anotherPlayerIndex], {
+      //   cmd: 'draw',
+      //   from: 'deck',
+      //   player: 'another'
+      // });
       this.choosePhase = false;
 
     } else if (data.button == 'left' && data.card != 'deck' && this._getCard(this.draw, data) != null && this.draw.length > 0) { // Draw from pile
@@ -342,22 +377,45 @@ module.exports = class Lobby {
       let nextCard = this.draw.pop();
       this.playerCards[playerIndex].push(nextCard);
 
-      this._send(this.sockets[playerIndex], {
-        cmd: 'draw',
-        from: 'draw',
-        player: 'me',
-        card: nextCard
-      });
-      this._send(this.sockets[opPlayerIndex], {
-        cmd: 'draw',
-        from: 'draw',
-        player: 'op'
-      });
-      this._send(this.sockets[anotherPlayerIndex], {
-        cmd: 'draw',
-        from: 'draw',
-        player: 'another'
-      });
+      for(let k =0; k < playerIndexesUtils.length; k++){
+        if (k == 0){
+          this._send(this.sockets[playerIndexesUtils[k]], {
+            cmd: 'draw',
+            from: 'draw',
+            player: 'me',
+            card: nextCard
+          });
+        } else{
+          let playerName = ""
+          if(k == 1){
+            playerName = "op"
+          } else{
+            playerName = "another"
+          }
+          this._send(this.sockets[playerIndexesUtils[k]], {
+            cmd: 'draw',
+            from: 'draw',
+            player: playerName
+          });
+        }
+      }
+
+      // this._send(this.sockets[playerIndex], {
+      //   cmd: 'draw',
+      //   from: 'draw',
+      //   player: 'me',
+      //   card: nextCard
+      // });
+      // this._send(this.sockets[opPlayerIndex], {
+      //   cmd: 'draw',
+      //   from: 'draw',
+      //   player: 'op'
+      // });
+      // this._send(this.sockets[anotherPlayerIndex], {
+      //   cmd: 'draw',
+      //   from: 'draw',
+      //   player: 'another'
+      // });
       this.choosePhase = false;
 
     }
@@ -374,27 +432,46 @@ module.exports = class Lobby {
     this.playerCards[playerIndex].splice(this.playerCards[playerIndex].indexOf(card), 1);
     this.draw.push(card);
 
-    let opPlayerIndex = playerIndex == 2 ? 0 : playerIndex + 1
-    let anotherPlayerIndex = playerIndex == 1 ? 0 : playerIndex == 2 ? 1 : playerIndex + 2
+    let playerIndexesUtils = Utils.findIndexes(this.sockets.length, playerIndex)
 
-    this._send(this.sockets[playerIndex], {
-      cmd: 'discard',
-      player: 'me',
-      card: card
-    });
-    this._send(this.sockets[opPlayerIndex], {
-      cmd: 'discard',
-      player: 'op',
-      card: card
-    });
-    this._send(this.sockets[anotherPlayerIndex], {
-      cmd: 'discard',
-      player: 'another',
-      card: card
-    });
+    let opPlayerIndex = playerIndexesUtils[1] // playerIndex == 2 ? 0 : playerIndex + 1
+    let anotherPlayerIndex = playerIndexesUtils[2] // playerIndex == 1 ? 0 : playerIndex == 2 ? 1 : playerIndex + 2
+
+    for(let i = 0; i < playerIndexesUtils.length; i++){
+      let playerName = ""
+      if (i == 0){
+        playerName = "me"
+      } else if (i == 1){
+        playerName = "op"
+      } else if (i == 2){
+        playerName = "another"
+      }
+
+      this._send(this.sockets[playerIndexesUtils[i]], {
+        cmd: 'discard',
+        player: playerName,
+        card: card
+      });
+    }
+
+    // this._send(this.sockets[playerIndex], {
+    //   cmd: 'discard',
+    //   player: 'me',
+    //   card: card
+    // });
+    // this._send(this.sockets[opPlayerIndex], {
+    //   cmd: 'discard',
+    //   player: 'op',
+    //   card: card
+    // });
+    // this._send(this.sockets[anotherPlayerIndex], {
+    //   cmd: 'discard',
+    //   player: 'another',
+    //   card: card
+    // });
     this.choosePhase = true;
     // this.turn ^= 1;
-    this.turn = this.turn == 2 ? 0 : this.turn + 1;
+    this.turn = this.turn == (this.sockets.length - 1) ? 0 : this.turn + 1;
 
     if(this.turn == 1 && this.cpu) {
       this._play_cpu_turn();

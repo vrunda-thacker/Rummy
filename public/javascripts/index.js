@@ -1,3 +1,7 @@
+// const consts = require("../../consts");
+// import utils from "../../utils";
+// const utils = require("../../utils");
+// import { verifyPlayerName } from "../../utils";
 /*
  * Functions for the Lobby/Index Page
  */
@@ -41,31 +45,43 @@ $('#code').on('keyup', () => { // As the user types...
   $('#cpubtn').css({ display: 'none' });
 
   let code = $('#code').val().replace(/\W/, ''); // Replace invalid chars
-  console.log("code kaik aavyu");
-  console.log(code);
+  let playerName = $('#player-name').val()
+  // console.log("code kaik aavyu");
+  // console.log(code);
 
   $('#code').val(code);
 
-  if (/^\w{5,12}$/.test(code)) {
+  // console.log("kuguyguigiu")
 
-    $('#lobbybtn').attr('class', 'btn btn-default');
-    $('#lobbybtn').html('....');
-    $('#lobbybtn').on('click', () => {});
+  // console.log(playerName);
+  if (playerName){
 
-    console.log("send data of currently typed lobby");
-    console.log(code);
+    if (/^\w{5,12}$/.test(code)) {
 
-    send({
-      'cmd': 'status',
-      'lobby': code
-    }); // Request status of currently typed lobby
+      $('#lobbybtn').attr('class', 'btn btn-default');
+      $('#lobbybtn').html('....');
+      $('#lobbybtn').on('click', () => {});
 
-  } else {
+      console.log("send data of currently typed lobby");
+      console.log(code);
 
+      send({
+        'cmd': 'status',
+        'lobby': code,
+        'playerName': playerName
+      }); // Request status of currently typed lobby
+
+    } else {
+
+      $('#lobbybtn').attr('class', 'btn btn-danger');
+      $('#lobbybtn').html('Invalid');
+      $('#lobbybtn').on('click', () => {});
+
+    }
+  } else{
     $('#lobbybtn').attr('class', 'btn btn-danger');
-    $('#lobbybtn').html('Invalid');
+    $('#lobbybtn').html('Invalid Player name');
     $('#lobbybtn').on('click', () => {});
-
   }
 
 });

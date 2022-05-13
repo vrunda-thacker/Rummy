@@ -3,6 +3,12 @@
  */
 
 let setElementPos = (element, x, y, z = 2, degs = 0) => { // Sets an elements position via CSS
+  // console.log("set elemennt pos log")
+  // console.log(element)
+  // console.log(x)
+  // console.log(y)
+  // console.log(z)
+  // console.log(degs)
   $(element.html).css({
     'transform': `translateX(${x}px) translateY(${y}px) rotateZ(${degs}deg)`,
     'MozTransform': `translateX(${x}px) translateY(${y}px) rotateZ(${degs}deg)`,
