@@ -8,9 +8,17 @@ let code = params[4],
 
 // Local Game Objects
 // Note: The server verifies their integrity to prevent Front-End tampering/cheating
+let totalPlayers = 3;
+let glowcolors = ['#005bf9', '#fa001e', '#39e600'];
+let hands = {
+  'myhand': []
+}
+for(i=1; i<totalPlayers;i++){
+  let key = `op${i}hand`
+  hands[key] = []
+}
+
 let hand = [],
-    ophand = [],
-    anotherhand = [],
     deck = [],
     draw = [],
     melds = [];
@@ -112,8 +120,12 @@ let beginLeave = () => { // Start a countdown to automatically leave
 
 $(window).on('resize', () => { // Re-render all elements when the window size changes
   renderHand(hand);
-  renderHand(ophand, flip=true, "op");
-  renderHand(anotherhand, flip=true, "another");
+
+  for(i=1; i<totalPlayers;i++){
+    let key = `op${i}hand`;
+    let renderKey = `op${i}`;
+    renderHand(hands[key], flip=true, renderKey);
+  }
   renderDeck(deck, left=true);
   renderDeck(draw);
   renderMelds(melds);

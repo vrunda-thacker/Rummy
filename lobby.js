@@ -18,8 +18,10 @@ module.exports = class Lobby {
     this.cpu = isCPU;
     this.game = game;
     this.token = Crypto.randomBytes(22).toString('hex'); // Generate random lobby code
-
-    this.sockets = [null, null, null];
+    this.sockets = [];
+    for(let i = 0; i < consts.numberOfPlayers; i++){
+      this.sockets.push(null)
+    }
     this.isWaiting = true;
     this.choosePhase = true;
     this.turn = 0;
@@ -246,9 +248,6 @@ module.exports = class Lobby {
    */
   _process_join(ws) {
 
-    console.log("lobby null 6 ke nahi")
-    console.log(this.sockets)
-
     if (!this.isWaiting || this.sockets.indexOf(null) == -1) { // If lobby full -> tell new client to leave
 
       this._send(ws, {
@@ -262,51 +261,25 @@ module.exports = class Lobby {
         this.isWaiting = false;
       }
 
-      // console.log("==================")
-      // console.log(this.sockets.indexOf(ws))
-      // console.log(this.sockets.indexOf(ws) ^ 1)
-      // console.log(this.playerCards[this.sockets.indexOf(ws) ^ 1])
-      // console.log("----------------------")
-
       let playerIndexesUtils = Utils.findIndexes(this.sockets.length, this.sockets.indexOf(ws))
-      console.log("player index by utils")
-      console.log(playerIndexesUtils)
 
-      // if (this.sockets.indexOf(ws) == 0){
+      let opcards= []
+
+      for(let i=1; i<consts.numberOfPlayers; i++){
+        opcards.push(this.playerCards[playerIndexesUtils[i]].length)
+      }
+
       this._send(ws, { // Send copy of current deck and layout to new client
         cmd: 'cards',
         cards: this.playerCards[playerIndexesUtils[0]],
-        opcards: this.playerCards[playerIndexesUtils[1]].length,
-        anothercards: this.playerCards[playerIndexesUtils[2]].length,
         deck: this.deck.length,
         melds: this.melds,
         draw: this.draw,
-        myturn: this.sockets.indexOf(ws) == this.turn
+        myturn: this.sockets.indexOf(ws) == this.turn,
+        numberOfPlayers: consts.numberOfPlayers,
+        playerNames: consts.playerNames,
+        opido: opcards
       });
-      // } else if (this.sockets.indexOf(ws) == 1){
-      //   this._send(ws, { // Send copy of current deck and layout to new client
-      //     cmd: 'cards',
-      //     cards: this.playerCards[1],
-      //     opcards: this.playerCards[2].length,
-      //     anothercards: this.playerCards[0].length,
-      //     deck: this.deck.length,
-      //     melds: this.melds,
-      //     draw: this.draw,
-      //     myturn: this.sockets.indexOf(ws) == this.turn
-      //   });
-      // } else if (this.sockets.indexOf(ws) == 2){
-      //   this._send(ws, { // Send copy of current deck and layout to new client
-      //     cmd: 'cards',
-      //     cards: this.playerCards[2],
-      //     opcards: this.playerCards[0].length,
-      //     anothercards: this.playerCards[1].length,
-      //     deck: this.deck.length,
-      //     melds: this.melds,
-      //     draw: this.draw,
-      //     myturn: this.sockets.indexOf(ws) == this.turn
-      //   });
-      // }
-
     }
 
   }
@@ -340,12 +313,7 @@ module.exports = class Lobby {
             card: nextCard
           });
         } else{
-          let playerName = ""
-          if(k == 1){
-            playerName = "op"
-          } else{
-            playerName = "another"
-          }
+          let playerName = `op${k}`;
           this._send(this.sockets[playerIndexesUtils[k]], {
             cmd: 'draw',
             from: 'deck',
@@ -353,23 +321,6 @@ module.exports = class Lobby {
           });
         }
       }
-
-      // this._send(this.sockets[playerIndex], {
-      //   cmd: 'draw',
-      //   from: 'deck',
-      //   player: 'me',
-      //   card: nextCard
-      // });
-      // this._send(this.sockets[opPlayerIndex], {
-      //   cmd: 'draw',
-      //   from: 'deck',
-      //   player: 'op'
-      // });
-      // this._send(this.sockets[anotherPlayerIndex], {
-      //   cmd: 'draw',
-      //   from: 'deck',
-      //   player: 'another'
-      // });
       this.choosePhase = false;
 
     } else if (data.button == 'left' && data.card != 'deck' && this._getCard(this.draw, data) != null && this.draw.length > 0) { // Draw from pile
@@ -386,12 +337,7 @@ module.exports = class Lobby {
             card: nextCard
           });
         } else{
-          let playerName = ""
-          if(k == 1){
-            playerName = "op"
-          } else{
-            playerName = "another"
-          }
+          let playerName = `op${k}`;
           this._send(this.sockets[playerIndexesUtils[k]], {
             cmd: 'draw',
             from: 'draw',
@@ -399,23 +345,6 @@ module.exports = class Lobby {
           });
         }
       }
-
-      // this._send(this.sockets[playerIndex], {
-      //   cmd: 'draw',
-      //   from: 'draw',
-      //   player: 'me',
-      //   card: nextCard
-      // });
-      // this._send(this.sockets[opPlayerIndex], {
-      //   cmd: 'draw',
-      //   from: 'draw',
-      //   player: 'op'
-      // });
-      // this._send(this.sockets[anotherPlayerIndex], {
-      //   cmd: 'draw',
-      //   from: 'draw',
-      //   player: 'another'
-      // });
       this.choosePhase = false;
 
     }
@@ -434,17 +363,12 @@ module.exports = class Lobby {
 
     let playerIndexesUtils = Utils.findIndexes(this.sockets.length, playerIndex)
 
-    let opPlayerIndex = playerIndexesUtils[1] // playerIndex == 2 ? 0 : playerIndex + 1
-    let anotherPlayerIndex = playerIndexesUtils[2] // playerIndex == 1 ? 0 : playerIndex == 2 ? 1 : playerIndex + 2
-
     for(let i = 0; i < playerIndexesUtils.length; i++){
       let playerName = ""
       if (i == 0){
         playerName = "me"
-      } else if (i == 1){
-        playerName = "op"
-      } else if (i == 2){
-        playerName = "another"
+      } else{
+        playerName = `op${i}`
       }
 
       this._send(this.sockets[playerIndexesUtils[i]], {
@@ -453,24 +377,7 @@ module.exports = class Lobby {
         card: card
       });
     }
-
-    // this._send(this.sockets[playerIndex], {
-    //   cmd: 'discard',
-    //   player: 'me',
-    //   card: card
-    // });
-    // this._send(this.sockets[opPlayerIndex], {
-    //   cmd: 'discard',
-    //   player: 'op',
-    //   card: card
-    // });
-    // this._send(this.sockets[anotherPlayerIndex], {
-    //   cmd: 'discard',
-    //   player: 'another',
-    //   card: card
-    // });
     this.choosePhase = true;
-    // this.turn ^= 1;
     this.turn = this.turn == (this.sockets.length - 1) ? 0 : this.turn + 1;
 
     if(this.turn == 1 && this.cpu) {
@@ -497,16 +404,21 @@ module.exports = class Lobby {
       }
       this.melds.push(newMeld);
 
-      this._send(this.sockets[playerIndex], {
-        cmd: 'newmeld',
-        player: 'me',
-        meld: newMeld
-      });
-      this._send(this.sockets[playerIndex ^ 1], {
-        cmd: 'newmeld',
-        player: 'op',
-        meld: newMeld
-      });
+      let playerIndexesUtils = Utils.findIndexes(this.sockets.length, playerIndex)
+      for(let i = 0; i < playerIndexesUtils.length; i++){
+        let playerName = ""
+        if (i == 0){
+          playerName = "me"
+        } else{
+          playerName = `op${i}`
+        }
+  
+        this._send(this.sockets[playerIndexesUtils[i]], {
+          cmd: 'newmeld',
+          player: playerName,
+          meld: newMeld
+        });
+      }
 
     } else { //-> See if this card can be added to a meld
 
@@ -516,25 +428,25 @@ module.exports = class Lobby {
         this.playerCards[playerIndex].splice(this.playerCards[playerIndex].indexOf(card), 1);
         this.melds[meld.index] = meld.meld;
 
-        this._send(this.sockets[playerIndex], {
-          cmd: 'addmeld',
-          player: 'me',
-          index: meld.index,
-          card: card,
-          meld: meld.meld
-        });
-        this._send(this.sockets[playerIndex ^ 1], {
-          cmd: 'addmeld',
-          player: 'op',
-          index: meld.index,
-          card: card,
-          meld: meld.meld
-        });
-
+        let playerIndexesUtils = Utils.findIndexes(this.sockets.length, playerIndex)
+        for(let i = 0; i < playerIndexesUtils.length; i++){
+          let playerName = ""
+          if (i == 0){
+            playerName = "me"
+          } else{
+            playerName = `op${i}`
+          }
+    
+          this._send(this.sockets[playerIndexesUtils[i]], {
+            cmd: 'addmeld',
+            player: playerName,
+            index: meld.index,
+            card: card,
+            meld: meld.meld
+          });
+        }
       }
-
     }
-
   }
 
   /**
@@ -669,9 +581,9 @@ module.exports = class Lobby {
     }
 
     this.playerCards = [
-      cards.splice(0, 10),
-      cards.splice(0, 10),
-      cards.splice(0, 10)
+      cards.splice(0, consts.cardsPerPlayer),
+      cards.splice(0, consts.cardsPerPlayer),
+      cards.splice(0, consts.cardsPerPlayer)
     ];
 
     this.melds = [];

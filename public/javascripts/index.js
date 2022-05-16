@@ -1,7 +1,3 @@
-// const consts = require("../../consts");
-// import utils from "../../utils";
-// const utils = require("../../utils");
-// import { verifyPlayerName } from "../../utils";
 /*
  * Functions for the Lobby/Index Page
  */
@@ -46,14 +42,9 @@ $('#code').on('keyup', () => { // As the user types...
 
   let code = $('#code').val().replace(/\W/, ''); // Replace invalid chars
   let playerName = $('#player-name').val()
-  // console.log("code kaik aavyu");
-  // console.log(code);
 
   $('#code').val(code);
 
-  // console.log("kuguyguigiu")
-
-  // console.log(playerName);
   if (playerName){
 
     if (/^\w{5,12}$/.test(code)) {
@@ -61,9 +52,6 @@ $('#code').on('keyup', () => { // As the user types...
       $('#lobbybtn').attr('class', 'btn btn-default');
       $('#lobbybtn').html('....');
       $('#lobbybtn').on('click', () => {});
-
-      console.log("send data of currently typed lobby");
-      console.log(code);
 
       send({
         'cmd': 'status',

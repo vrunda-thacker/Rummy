@@ -3,12 +3,6 @@
  */
 
 let setElementPos = (element, x, y, z = 2, degs = 0) => { // Sets an elements position via CSS
-  // console.log("set elemennt pos log")
-  // console.log(element)
-  // console.log(x)
-  // console.log(y)
-  // console.log(z)
-  // console.log(degs)
   $(element.html).css({
     'transform': `translateX(${x}px) translateY(${y}px) rotateZ(${degs}deg)`,
     'MozTransform': `translateX(${x}px) translateY(${y}px) rotateZ(${degs}deg)`,
@@ -24,6 +18,14 @@ let setGlow = (selector, amt, color) => { // Adds a colored glow
     '-webkit-box-shadow': `0 0 ${amt}px ${color}`,
     'box-shadow': `0px 0px ${amt}px ${color}`
   });
+}
+
+let setGlowForAllPlayer = () =>{
+  setGlow($('.myhand'), 15, '#005bf9');
+  for(i=1; i<totalPlayers;i++){
+    let key = `op${i}hand`;
+    setGlow($(`.${key}`), 15, glowcolors[i]);
+  }
 }
 
 let renderHand = (handCards, flip = false, type="me") => { // Renders hand (for both self and enemy)
@@ -54,10 +56,10 @@ let renderHand = (handCards, flip = false, type="me") => { // Renders hand (for 
     if (type == "me"){
       setElementPos(handCards[leftIndex], offset + leftIndex * 20, height, leftIndex + 100, i * dangle);
       setElementPos(handCards[rightIndex], offset + rightIndex * 20, height, rightIndex + 100, i * -dangle);
-    } else if (type == "op"){
+    } else if (type == "op1"){
       setElementPos(handCards[leftIndex], opOffset + leftIndex * 20, height, leftIndex + 100, i * dangle);
       setElementPos(handCards[rightIndex], opOffset + rightIndex * 20, height, rightIndex + 100, i * -dangle);
-    } else if (type == "another"){
+    } else if (type == "op2"){
       setElementPos(handCards[leftIndex], anotherOffset + leftIndex * 20, height, leftIndex + 100, i * dangle);
       setElementPos(handCards[rightIndex], anotherOffset + rightIndex * 20, height, rightIndex + 100, i * -dangle);
     }

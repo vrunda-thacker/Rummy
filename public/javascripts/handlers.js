@@ -13,8 +13,6 @@ handle.exit = (data) => { // Handle Exir
 }
 
 handle.cards = (data) => { // Handle initial cards/layout
-  console.log("init cards draw")
-  console.log(data)
 
   for (let card of data.cards) {
     $("#cards").append(`<div class="card _${card.rank} ${card.suit} myhand"></div>`);
@@ -34,21 +32,21 @@ handle.cards = (data) => { // Handle initial cards/layout
   }
 
   // Create fake cards to prevent cheating (by people who inspect element to see opponents cards)
-  anotherhand = createFakeCards('anotherhand', data.anothercards);
-  ophand = createFakeCards('ophand', data.opcards);
+  for(i=1; i<totalPlayers;i++){
+    let key = `op${i}hand`;
+    let renderKey = `op${i}`;
+    hands[key] = createFakeCards(key, data.opido[i-1]);
+    renderHand(hands[key], flip=true, renderKey);
+  }
   deck = createFakeCards('deck', data.deck);
 
   renderHand(hand);
-  renderHand(ophand, flip=true, "op");
-  renderHand(anotherhand, flip=true, "another");
   renderDeck(deck, left=true);
   renderDeck(draw);
   renderMelds(melds);
   renderHint();
 
-  setGlow($('.anotherhand'), 15, '#39e600');
-  setGlow($('.ophand'), 15, '#fa001e');
-  setGlow($('.myhand'), 15, '#005bf9');
+  setGlowForAllPlayer();
 
   setClickHandle();
 
@@ -78,27 +76,17 @@ handle.draw = (data) => { // Handle draw
     hand.push(data.card);
     renderHand(hand);
     $('#hints').html('<h5>Right Click your hand <br> to create a meld or <br> Left Click to discard <br> a card and end your turn</h5>');
-  } else if (data.player == 'op'){
-    $(nextCard.html).attr('class', `card ophand fake_${ophand.length} unknown`);
-    ophand.push({
-      html: `.card.fake_${ophand.length}.ophand`,
+  } else{
+    let classKey = `${data.player}hand`
+    $(nextCard.html).attr('class', `card ${classKey} fake_${hands[classKey].length} unknown`);
+    hands[classKey].push({
+      html: `.card.fake_${hands[classKey].length}.${classKey}`,
       suit: 'none',
       rank: 'none'
     });
-    renderHand(ophand, flip=true, "op");
-  } else if (data.player == 'another'){
-    $(nextCard.html).attr('class', `card anotherhand fake_${anotherhand.length} unknown`);
-    anotherhand.push({
-      html: `.card.fake_${anotherhand.length}.anotherhand`,
-      suit: 'none',
-      rank: 'none'
-    });
-    renderHand(anotherhand, flip=true, "another");
+    renderHand(hands[classKey], flip=true, data.player);
   }
-
-  setGlow($('.anotherhand'), 15, '#39e600');
-  setGlow($('.ophand'), 15, '#fa001e');
-  setGlow($('.myhand'), 15, '#005bf9');
+  setGlowForAllPlayer();
 
 }
 
@@ -111,26 +99,20 @@ handle.discard = (data) => { // Handle discard
     renderHand(hand);
     renderDeck(draw);
     $('#hints').html('<h5>Opponents Turn...</h5>');
-  } else if (data.player == 'op'){
-    let nextCard = ophand.pop();
+  } else{
+    let classKey = `${data.player}hand`;
+    let nextCard = hands[classKey].pop();
     $(nextCard.html).attr('class', `card _${data.card.rank} ${data.card.suit}`);
     draw.push(data.card);
-    renderHand(ophand, flip=true, "op");
+    renderHand(hands[classKey], flip=true, data.player);
     renderDeck(draw);
-    // $('#hints').html('<h5>Left Click to select <br> a card from the middle</h5>');
-    $('#hints').html('<h5>Left Click to select <br> a card from the middle</h5>');
-  } else if (data.player == 'another'){
-    let nextCard = anotherhand.pop();
-    $(nextCard.html).attr('class', `card _${data.card.rank} ${data.card.suit}`);
-    draw.push(data.card);
-    renderHand(anotherhand, flip=true, "another");
-    renderDeck(draw);
-    $('#hints').html('<h5>Another player Turn...</h5>');
+    if (data.player == 'op1'){
+      $('#hints').html('<h5>Left Click to select <br> a card from the middle</h5>');
+    } else{
+      $('#hints').html('<h5>Another player Turn...</h5>');
+    }
   }
-
-  setGlow($('.anotherhand'), 15, '#39e600');
-  setGlow($('.ophand'), 15, '#fa001e');
-  setGlow($('.myhand'), 15, '#005bf9');
+  setGlowForAllPlayer();
 
 }
 
@@ -143,24 +125,16 @@ handle.newmeld = (data) => { // Handles creation of a new meld
     melds.push(data.meld);
     renderHand(hand);
     renderMelds(melds);
-  } else if(data.player == 'op') {
-    for(let card of data.meld) {
-      let nextCard = ophand.pop();
+  } else{
+    let classKey = `${data.player}hand`;
+    for(let card of data.meld) {   
+      let nextCard = hands[classKey].pop();
       $(nextCard.html).attr('class', `card _${card.rank} ${card.suit}`);
     }
     melds.push(data.meld);
-    renderHand(ophand, flip=true, "op");
-    renderMelds(melds);
-  } else if(data.player == 'another') {
-    for(let card of data.meld) {
-      let nextCard = anotherhand.pop();
-      $(nextCard.html).attr('class', `card _${card.rank} ${card.suit}`);
-    }
-    melds.push(data.meld);
-    renderHand(anotherhand, flip=true, "another");
+    renderHand(hands[classKey], flip=true, data.player);
     renderMelds(melds);
   }
-
 }
 
 handle.addmeld = (data) => { // Handles the edit of a previous meld
@@ -170,20 +144,14 @@ handle.addmeld = (data) => { // Handles the edit of a previous meld
     melds[data.index] = data.meld;
     renderHand(hand);
     renderMelds(melds);
-  } else if (data.player == 'op'){
-    let nextCard = ophand.pop();
+  } else{
+    let classKey = `${data.player}hand`;
+    let nextCard = hands[classKey].pop();
     $(nextCard.html).attr('class', `card _${data.card.rank} ${data.card.suit}`);
     melds[data.index] = data.meld;
-    renderHand(ophand, flip=true, "op");
-    renderMelds(melds);
-  } else if (data.player == 'another'){
-    let nextCard = anotherhand.pop();
-    $(nextCard.html).attr('class', `card _${data.card.rank} ${data.card.suit}`);
-    melds[data.index] = data.meld;
-    renderHand(anotherhand, flip=true, "another");
+    renderHand(hands[classKey], flip=true, data.player);
     renderMelds(melds);
   }
-
 }
 
 handle.win = (data) => { // Handle win
