@@ -1,4 +1,6 @@
+const consts = require('./consts');
 const Lobby = require('./lobby');
+const Utils = require('./utils');
 
 // Exports Game Class
 module.exports = class Game {
@@ -22,6 +24,10 @@ module.exports = class Game {
       ws.on('message', (message) => {
 
         let data = JSON.parse(message);
+        if (data.playerName){
+          Utils.registerPlayerName(data.playerName)
+        }
+        
 
         if (data.cmd == 'status') {
           this._send(ws, {
@@ -53,10 +59,14 @@ module.exports = class Game {
    * @returns {string} The status
    */
   _retrieve_status(code) {
+    console.log("lobby code ")
+    console.log(code)
 
     if (/^\w{5,12}$/.test(code)) {
 
       let lobby = this.lobbys[code];
+      console.log("here ", lobby)
+      console.log(this.lobbys)
 
       if (lobby) {
         return lobby.isWaiting ? 'waiting' : 'closed';

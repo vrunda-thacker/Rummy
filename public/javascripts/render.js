@@ -20,11 +20,19 @@ let setGlow = (selector, amt, color) => { // Adds a colored glow
   });
 }
 
-let renderHand = (handCards, flip = false) => { // Renders hand (for both self and enemy)
+let setGlowForAllPlayer = () =>{
+  setGlow($('.myhand'), 15, '#005bf9');
+  for(i=1; i<totalPlayers;i++){
+    let key = `op${i}hand`;
+    setGlow($(`.${key}`), 15, glowcolors[i]);
+  }
+}
+
+let renderHand = (handCards, flip = false, type="me") => { // Renders hand (for both self and enemy)
 
   if(!flip) { sortDeck(handCards) }; // Sort my cards
 
-  let height = flip ? 20 : $(window).height() - 250;
+  let height = flip ? 30 : $(window).height() - 250;
   let dangle = flip ? 4 : -4; // Rotation offset
 
   let i = 1,
@@ -32,29 +40,48 @@ let renderHand = (handCards, flip = false) => { // Renders hand (for both self a
       rightIndex = -1,
       half = Math.floor(handCards.length / 2),
       offset = ($(window).width() / 2) - (20 * handCards.length / 2) - 70;
+  let opOffset = ($(window).width() / 4) - (20 * handCards.length / 2) - 70;
+  let anotherOffset = ($(window).width() / 2);
 
   if (handCards.length % 2 == 1) {
     leftIndex = half - 1;
     rightIndex = half + 1;
-    setElementPos(handCards[half], $(window).width() / 2 - 75, height, half + 100, 0);
+    setElementPos(handCards[half], 100, height, half + 100, 0);
   } else {
     leftIndex = half - 1;
     rightIndex = half;
   }
 
   while (leftIndex >= 0) { // Start at middle card and setPos going outward
-    setElementPos(handCards[leftIndex], offset + leftIndex * 20, height, leftIndex + 100, i * dangle);
-    setElementPos(handCards[rightIndex], offset + rightIndex * 20, height, rightIndex + 100, i * -dangle);
+    setElementPos(handCards[leftIndex], leftIndex * 20, height, leftIndex + 100, i * dangle);
+    setElementPos(handCards[rightIndex], rightIndex * 20, height, rightIndex + 100, i * -dangle);
     leftIndex--;
     rightIndex++;
     i++;
   }
 
+  // while (leftIndex >= 0) { // Start at middle card and setPos going outward
+  //   if (type == "me"){
+  //     setElementPos(handCards[leftIndex], offset + leftIndex * 20, height, leftIndex + 100, i * dangle);
+  //     setElementPos(handCards[rightIndex], offset + rightIndex * 20, height, rightIndex + 100, i * -dangle);
+  //   } else if (type == "op1"){
+  //     setElementPos(handCards[leftIndex], opOffset + leftIndex * 20, height, leftIndex + 100, i * dangle);
+  //     setElementPos(handCards[rightIndex], opOffset + rightIndex * 20, height, rightIndex + 100, i * -dangle);
+  //   } else if (type == "op2"){
+  //     setElementPos(handCards[leftIndex], anotherOffset + leftIndex * 20, height, leftIndex + 100, i * dangle);
+  //     setElementPos(handCards[rightIndex], anotherOffset + rightIndex * 20, height, rightIndex + 100, i * -dangle);
+  //   }
+  //   leftIndex--;
+  //   rightIndex++;
+  //   i++;
+  // }
+
 }
 
 let renderDeck = (cards, left = false) => { // Renders deck (for both deck and face up draw pile)
 
-  let offset = left ? $(window).width() / 2 - 200 : $(window).width() / 2 + 40;
+  // let offset = left ? $(window).width() / 2 - 200 : $(window).width() / 2 + 40;
+  let offset = left ? 0 : 190;
 
   for (let i in cards) {
     setElementPos(cards[i], offset, $(window).height() / 2 - 99, i + 2, 0);
@@ -85,6 +112,6 @@ let renderMelds = (melds) => { // Renders Melds
 
 let renderHint = () => { // Render hint msg in the top right
 
-  setElementPos({html: '#hints'}, $(window).width() - 200, 10, 9999);
+  setElementPos({html: '#hints'}, $(window).width() - 200, $(window).height()/2, 9999);
 
 }

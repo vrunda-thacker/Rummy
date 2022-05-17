@@ -11,6 +11,8 @@ let joinCPU = () => { // Creates CPU game
 };
 
 handle.status = (data) => { // Handle getting the status of a lobby
+  console.log("status dta")
+  console.log(data)
 
   if (data.cmd == 'status') {
     if (data.status == 'waiting') {
@@ -39,26 +41,35 @@ $('#code').on('keyup', () => { // As the user types...
   $('#cpubtn').css({ display: 'none' });
 
   let code = $('#code').val().replace(/\W/, ''); // Replace invalid chars
+  let playerName = $('#player-name').val()
 
   $('#code').val(code);
 
-  if (/^\w{5,12}$/.test(code)) {
+  if (playerName){
 
-    $('#lobbybtn').attr('class', 'btn btn-default');
-    $('#lobbybtn').html('....');
-    $('#lobbybtn').on('click', () => {});
+    if (/^\w{5,12}$/.test(code)) {
 
-    send({
-      'cmd': 'status',
-      'lobby': code
-    }); // Request status of currently typed lobby
+      $('#lobbybtn').attr('class', 'btn btn-default');
+      $('#lobbybtn').html('....');
+      $('#lobbybtn').on('click', () => {});
 
-  } else {
+      send({
+        'cmd': 'status',
+        'lobby': code,
+        'playerName': playerName
+      }); // Request status of currently typed lobby
 
+    } else {
+
+      $('#lobbybtn').attr('class', 'btn btn-danger');
+      $('#lobbybtn').html('Invalid');
+      $('#lobbybtn').on('click', () => {});
+
+    }
+  } else{
     $('#lobbybtn').attr('class', 'btn btn-danger');
-    $('#lobbybtn').html('Invalid');
+    $('#lobbybtn').html('Invalid Player name');
     $('#lobbybtn').on('click', () => {});
-
   }
 
 });
