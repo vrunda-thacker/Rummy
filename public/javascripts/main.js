@@ -8,8 +8,8 @@ let code = params[4],
 
 // Local Game Objects
 // Note: The server verifies their integrity to prevent Front-End tampering/cheating
-let totalPlayers = 3;
-let glowcolors = ['#005bf9', '#fa001e', '#39e600'];
+let totalPlayers = 0;
+let glowcolors = ['#005bf9', '#fa001e', '#39e600', '#F5F96F'];
 let hands = {
   'myhand': []
 }
@@ -84,13 +84,25 @@ let getCard = (collection, targetCard) => { // Find Card
 
 let createFakeCards = (name, n) => { // Creates fake cards (to mask true identity until played/drawn)
   let cards = [];
-  for (let i = 0; i < n; i++) {
-    $("#cards").append(`<div class="card ${name} fake_${i} unknown"></div>`);
-    cards.push({
-      html: `.card.fake_${i}.${name}`,
-      suit: 'none',
-      rank: 'none'
-    });
+  if (name === 'deck'){
+    for (let i = 0; i < n; i++) {
+      $(`.fake_deck`).append(`<div class="card ${name} fake_${i} unknown"></div>`);
+      cards.push({
+        html: `.card.fake_${i}.${name}`,
+        suit: 'none',
+        rank: 'none'
+      });
+    }
+  } else{
+    $("#cards").append(`<div class="cards_${name}"></div>`);
+    for (let i = 0; i < n; i++) {
+      $(`.cards_${name}`).append(`<div class="card ${name} fake_${i} unknown"></div>`);
+      cards.push({
+        html: `.card.fake_${i}.${name}`,
+        suit: 'none',
+        rank: 'none'
+      });
+    }
   }
   return cards;
 }

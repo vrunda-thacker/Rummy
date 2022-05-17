@@ -278,7 +278,9 @@ module.exports = class Lobby {
         myturn: this.sockets.indexOf(ws) == this.turn,
         numberOfPlayers: consts.numberOfPlayers,
         playerNames: consts.playerNames,
-        opido: opcards
+        playerTurn: consts.playerNames[this.turn],
+        opido: opcards,
+        totalNumberOfPlayers: consts.numberOfPlayers
       });
     }
 
@@ -374,7 +376,8 @@ module.exports = class Lobby {
       this._send(this.sockets[playerIndexesUtils[i]], {
         cmd: 'discard',
         player: playerName,
-        card: card
+        card: card,
+        playerTurn: consts.playerNames[this.turn + 1],
       });
     }
     this.choosePhase = true;
@@ -580,11 +583,10 @@ module.exports = class Lobby {
       [cards[i], cards[j]] = [cards[j], cards[i]];
     }
 
-    this.playerCards = [
-      cards.splice(0, consts.cardsPerPlayer),
-      cards.splice(0, consts.cardsPerPlayer),
-      cards.splice(0, consts.cardsPerPlayer)
-    ];
+    this.playerCards = []
+    for (let i=0; i<consts.numberOfPlayers; i++){
+      this.playerCards.push(cards.splice(0, consts.cardsPerPlayer))
+    }
 
     this.melds = [];
 

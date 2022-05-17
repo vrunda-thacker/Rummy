@@ -24,12 +24,9 @@ module.exports = class Game {
       ws.on('message', (message) => {
 
         let data = JSON.parse(message);
-        console.log("from on message")
-        console.log(data);
         if (data.playerName){
           Utils.registerPlayerName(data.playerName)
         }
-        console.log(consts.playerNames)
         
 
         if (data.cmd == 'status') {

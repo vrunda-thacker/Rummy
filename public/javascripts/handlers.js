@@ -14,13 +14,15 @@ handle.exit = (data) => { // Handle Exir
 
 handle.cards = (data) => { // Handle initial cards/layout
 
+  totalPlayers = data.numberOfPlayers;
+
   for (let card of data.cards) {
-    $("#cards").append(`<div class="card _${card.rank} ${card.suit} myhand"></div>`);
+    $(".my_cards").append(`<div class="card _${card.rank} ${card.suit} myhand"></div>`);
     hand.push(card);
   }
 
   for (let card of data.draw) {
-    $("#cards").append(`<div class="card _${card.rank} ${card.suit}"></div>`);
+    $(".show_deck").append(`<div class="card _${card.rank} ${card.suit}"></div>`);
     draw.push(card);
   }
 
@@ -52,8 +54,10 @@ handle.cards = (data) => { // Handle initial cards/layout
 
   if(data.myturn) {
     $('#hints').html('<h5>Left Click to select <br> a card from the middle</h5>');
-  } else {
-    $('#hints').html('<h5>Opponents/Another Player Turn...</h5>');
+  } else if(data.playerTurn){
+    $('#hints').html(`<h5>${data.playerTurn} Turn...</h5>`);
+  } else{
+    $('#hints').html(`<h5>Waiting for other players to join...</h5>`);
   }
 
 }
@@ -98,7 +102,7 @@ handle.discard = (data) => { // Handle discard
     draw.push(data.card);
     renderHand(hand);
     renderDeck(draw);
-    $('#hints').html('<h5>Opponents Turn...</h5>');
+    $('#hints').html(`<h5>${data.playerTurn} Turn...</h5>`);
   } else{
     let classKey = `${data.player}hand`;
     let nextCard = hands[classKey].pop();
@@ -109,7 +113,7 @@ handle.discard = (data) => { // Handle discard
     if (data.player == 'op1'){
       $('#hints').html('<h5>Left Click to select <br> a card from the middle</h5>');
     } else{
-      $('#hints').html('<h5>Another player Turn...</h5>');
+      $('#hints').html(`<h5>${data.playerTurn} Turn...</h5>`);
     }
   }
   setGlowForAllPlayer();
